@@ -4,10 +4,10 @@ const crypto = require('crypto');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 
-const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
-fs.mkdirSync(dataDir, { recursive: true });
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'data', 'tuition.db');
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-const db = new Database(path.join(dataDir, 'tuition.db'));
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 

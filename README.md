@@ -20,38 +20,25 @@ Node.js + Express + SQLite, server-rendered pages, mobile-first.
 ## Run locally
 ```bash
 npm install
-npm start            # http://127.0.0.1:3000  (login: admin / admin123)
+npm start            # http://127.0.0.1:4000  (login: admin / admin123)
 ```
 Set `ADMIN_USER` / `ADMIN_PASSWORD` before the first start to choose the initial login. Change the password from Settings.
 
-## Deploy on Ubuntu
+## Configuration (environment variables)
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `4000` | Port to listen on |
+| `HOST` | `127.0.0.1` | Interface to listen on |
+| `DB_PATH` | `./data/tuition.db` | SQLite database file (folder is created if missing) |
+| `ADMIN_USER` / `ADMIN_PASSWORD` | `admin` / `admin123` | Initial login, used only when the database has no users |
+| `COOKIE_SECURE` | off | Set to `1` when the app is served over HTTPS |
+| `TZ` | `Asia/Kolkata` | Timezone for dates |
+
+## Deployment
+Runs as a `systemctl --user` service behind an HTTPS proxy, with the database kept outside the code folder. Update an existing deployment with:
 ```bash
-# 1. Node 20+, build tools for better-sqlite3, nginx, sqlite3 CLI for backups
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs build-essential nginx sqlite3
-sudo npm install -g pm2
-
-# 2. App
-cd ~ && git clone <your repo> tuition   # or scp the folder (without node_modules/data)
-cd tuition && npm ci --omit=dev
-ADMIN_PASSWORD='choose-a-strong-one' COOKIE_SECURE=0 node -e "require('./db')"   # creates DB + admin
-
-# 3. Run with PM2 (restarts on crash and on reboot)
-pm2 start ecosystem.config.js
-pm2 save && pm2 startup     # run the command it prints
-
-# 4. Nginx + HTTPS
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/tuition   # edit server_name
-sudo ln -s /etc/nginx/sites-available/tuition /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo apt install -y certbot python3-certbot-nginx && sudo certbot --nginx -d fees.example.com
-
-# 5. Nightly backups
-crontab -e    # add: 30 2 * * * /home/ubuntu/tuition/deploy/backup.sh
+cd ~/apps/tuition && git pull && npm ci && systemctl --user restart tuition
 ```
-`COOKIE_SECURE=1` (the default in `ecosystem.config.js`) requires HTTPS; set it to `0` if you test over plain HTTP first.
-
-Data lives in `data/tuition.db`. Copy `backups/` off the server now and then (e.g. to Google Drive).
 
 ## Project layout
 ```
@@ -62,5 +49,4 @@ lib/receipt.js       PDF receipt
 routes/              dashboard, students, collect, attendance, reports, settings, auth
 views/               EJS templates
 public/              style.css, app.js
-deploy/              nginx config, backup script
 ```
