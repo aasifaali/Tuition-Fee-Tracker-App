@@ -1,0 +1,51 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <h1>Students</h1>
+  <a class="btn primary" href="/students/new<%= batchId ? '?batch=' + batchId : '' %>"><%- u.icon('plus', 18) %> Add student</a>
+</div>
+
+<div class="stack">
+  <div class="chips" role="tablist">
+    <a class="chip <%= !batchId && !showInactive ? 'active' : '' %>" href="/students">All</a>
+    <% batches.forEach(b => { %>
+      <a class="chip <%= batchId === b.id && !showInactive ? 'active' : '' %>" href="/students?batch=<%= b.id %>"><%= b.class %><%= b.division %></a>
+    <% }) %>
+    <a class="chip <%= showInactive ? 'active' : '' %>" href="/students?status=inactive">Inactive</a>
+  </div>
+
+  <div class="search">
+    <%- u.icon('search', 18) %>
+    <input type="search" placeholder="Search by name, roll no or phone" data-filter="#student-list" aria-label="Search students">
+  </div>
+
+  <section class="card flush">
+    <% if (!rows.length) { %>
+      <div class="empty">
+        <p>No students here yet.</p>
+        <a class="btn primary" href="/students/new<%= batchId ? '?batch=' + batchId : '' %>">Add the first student</a>
+      </div>
+    <% } else { %>
+      <ul class="list" id="student-list">
+        <% rows.forEach(s => { %>
+          <li data-search="<%= [s.name, s.roll_no, s.phone, s.parent_name].filter(Boolean).join(' ').toLowerCase() %>">
+            <a class="row" href="/students/<%= s.id %>">
+              <span class="avatar"><%= s.name.charAt(0).toUpperCase() %></span>
+              <span class="main">
+                <div class="title"><%= s.name %></div>
+                <div class="meta">Class <%= s.class %><%= s.division %><%= s.roll_no ? ' · Roll ' + s.roll_no : '' %><%= s.phone ? ' · ' + s.phone : '' %></div>
+              </span>
+              <span class="end">
+                <% if (s.balance > 0) { %><span class="badge bad"><%= u.inr(s.balance) %> due</span>
+                <% } else if (s.balance < 0) { %><span class="badge accent"><%= u.inr(-s.balance) %> advance</span>
+                <% } else { %><span class="badge good">Paid</span><% } %>
+              </span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="empty hidden" data-empty>No matching students.</div>
+    <% } %>
+  </section>
+  <p class="muted small"><%= rows.length %> student<%= rows.length === 1 ? '' : 's' %></p>
+</div>
+<%- include('../partials/foot') %>

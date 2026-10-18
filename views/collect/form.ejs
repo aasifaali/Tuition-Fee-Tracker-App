@@ -1,0 +1,74 @@
+<%- include('../partials/head') %>
+<a class="back" href="/collect"><%- u.icon('back', 18) %> All students</a>
+
+<div class="grid grid-3-2" style="align-items:start">
+  <form class="card" method="post" action="/collect/<%= student.id %>" data-once>
+    <div class="profile-head" style="margin-bottom:16px">
+      <span class="avatar"><%= student.name.charAt(0).toUpperCase() %></span>
+      <div style="min-width:0">
+        <h1 style="font-size:19px"><%= student.name %></h1>
+        <div class="muted small">Class <%= student.class %><%= student.division %><%= student.roll_no ? ' · Roll ' + student.roll_no : '' %> ·
+          <a href="/students/<%= student.id %>">Profile</a></div>
+      </div>
+    </div>
+
+    <%- include('../partials/errors') %>
+
+    <div class="field">
+      <label for="amount">Amount received</label>
+      <div class="amount-wrap">
+        <input class="amount-input" id="amount" name="amount" type="number" min="1" step="1" inputmode="numeric" required
+          value="<%= form.amount || (ledger.balance > 0 ? ledger.balance : '') %>">
+      </div>
+      <div class="quick-amounts">
+        <% if (ledger.balance > 0) { %><button type="button" class="btn sm" data-amount="<%= ledger.balance %>">Full due <%= u.inr(ledger.balance) %></button><% } %>
+        <% unpaid.slice(0, 1).forEach(d => { if (d.amount - d.paid !== ledger.balance) { %>
+          <button type="button" class="btn sm" data-amount="<%= d.amount - d.paid %>"><%= u.monthLabel(d.month) %> only</button>
+        <% } }) %>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Payment mode</label>
+      <div class="segmented">
+        <% Object.entries(u.MODES).forEach(([k, v], i) => { %>
+          <input type="radio" name="mode" id="mode-<%= k %>" value="<%= k %>" <%= (form.mode ? form.mode === k : i === 0) ? 'checked' : '' %>>
+          <label for="mode-<%= k %>"><%= v %></label>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="paid_on">Date</label>
+        <input id="paid_on" name="paid_on" type="date" value="<%= form.paid_on || u.today() %>" max="<%= u.today() %>" required>
+      </div>
+      <div class="field">
+        <label for="note">Note (optional)</label>
+        <input id="note" name="note" value="<%= form.note || '' %>" placeholder="e.g. UPI ref no.">
+      </div>
+    </div>
+
+    <button class="btn good block lg"><%- u.icon('check', 20) %> Save payment &amp; create receipt</button>
+  </form>
+
+  <aside class="card">
+    <div class="muted small" style="font-weight:600;text-transform:uppercase;letter-spacing:.04em"><%= ledger.balance < 0 ? 'Advance credit' : 'Pending' %></div>
+    <div class="amount <%= ledger.balance > 0 ? 'bad' : 'good' %>" style="font-size:26px"><%= u.inr(Math.abs(ledger.balance)) %></div>
+    <% if (unpaid.length) { %>
+      <h3 style="margin:16px 0 8px">Unpaid months</h3>
+      <ul class="list">
+        <% unpaid.forEach(d => { %>
+          <li class="row" style="padding:8px 0;min-height:0">
+            <span class="main"><%= u.monthLabel(d.month) %><% if (d.status === 'partial') { %> <span class="badge warn">part paid</span><% } %></span>
+            <span class="amount"><%= u.inr(d.amount - d.paid) %></span>
+          </li>
+        <% }) %>
+      </ul>
+      <p class="muted small" style="margin:12px 0 0">Payments are applied to the oldest month first.</p>
+    <% } else { %>
+      <p class="muted" style="margin:8px 0 0">No unpaid months. Any amount received will be kept as advance.</p>
+    <% } %>
+  </aside>
+</div>
+<%- include('../partials/foot') %>

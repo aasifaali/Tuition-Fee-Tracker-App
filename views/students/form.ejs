@@ -1,0 +1,68 @@
+<%- include('../partials/head') %>
+<a class="back" href="<%= student.id ? '/students/' + student.id : '/students' %>"><%- u.icon('back', 18) %> Back</a>
+<div class="page-head"><h1><%= title %></h1></div>
+
+<form class="card" method="post" action="<%= student.id ? '/students/' + student.id : '/students' %>" style="max-width:720px">
+  <%- include('../partials/errors') %>
+  <div class="form-row">
+    <div class="field">
+      <label for="name">Student name *</label>
+      <input id="name" name="name" value="<%= student.name || '' %>" required autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="batch_id">Class *</label>
+      <select id="batch_id" name="batch_id" required>
+        <option value="">Choose class</option>
+        <% batches.forEach(b => { %>
+          <option value="<%= b.id %>" <%= Number(student.batch_id) === b.id ? 'selected' : '' %>>Class <%= b.class %><%= b.division %> — <%= u.inr(b.monthly_fee) %>/month</option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label for="roll_no">Roll no.</label>
+      <input id="roll_no" name="roll_no" value="<%= student.roll_no || '' %>" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label for="join_date">Joining date *</label>
+      <input id="join_date" name="join_date" type="date" value="<%= student.join_date || '' %>" max="<%= u.today() %>" required>
+      <div class="hint">Monthly fees are charged from this month onwards.</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label for="parent_name">Parent / guardian name</label>
+      <input id="parent_name" name="parent_name" value="<%= student.parent_name || '' %>">
+    </div>
+    <div class="field">
+      <label for="phone">Parent phone</label>
+      <input id="phone" name="phone" type="tel" value="<%= student.phone || '' %>" inputmode="tel" placeholder="10-digit mobile">
+    </div>
+  </div>
+  <div class="field">
+    <label for="address">Address</label>
+    <input id="address" name="address" value="<%= student.address || '' %>">
+  </div>
+  <div class="field">
+    <label for="monthly_fee">Custom monthly fee (₹)</label>
+    <input id="monthly_fee" name="monthly_fee" type="number" min="0" step="1" inputmode="numeric" value="<%= student.monthly_fee ?? '' %>" placeholder="Leave empty to use the class fee">
+    <div class="hint">Use this for discounts or scholarships. Applies to future months only.</div>
+  </div>
+  <div class="field">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes"><%= student.notes || '' %></textarea>
+  </div>
+  <div class="btn-row end">
+    <a class="btn" href="<%= student.id ? '/students/' + student.id : '/students' %>">Cancel</a>
+    <button class="btn primary"><%= student.id ? 'Save changes' : 'Add student' %></button>
+  </div>
+</form>
+
+<% if (student.id && typeof hasPayments !== 'undefined' && !hasPayments) { %>
+  <form method="post" action="/students/<%= student.id %>/delete" data-confirm="Delete <%= student.name %> permanently?" style="max-width:720px;margin-top:16px">
+    <button class="btn danger">Delete student</button>
+    <span class="muted small" style="margin-left:8px">Only possible while no payments are recorded.</span>
+  </form>
+<% } %>
+<%- include('../partials/foot') %>

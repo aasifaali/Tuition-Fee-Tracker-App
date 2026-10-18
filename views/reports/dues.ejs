@@ -1,0 +1,43 @@
+<%- include('../partials/head') %>
+<%- include('_tabs') %>
+<div class="stack">
+  <div class="chips">
+    <a class="chip <%= !batchId ? 'active' : '' %>" href="/reports/dues">All</a>
+    <% batches.forEach(b => { %><a class="chip <%= batchId === b.id ? 'active' : '' %>" href="?batch=<%= b.id %>"><%= b.class %><%= b.division %></a><% }) %>
+  </div>
+
+  <section class="stats">
+    <div class="card stat"><div class="label">Total pending</div><div class="value bad"><%= u.inr(total) %></div></div>
+    <div class="card stat"><div class="label">Students with dues</div><div class="value"><%= rows.length %></div></div>
+  </section>
+
+  <section class="card flush">
+    <div class="card-head">
+      <h2>Students with pending fees</h2>
+      <a class="btn sm" href="?<%= batchId ? 'batch=' + batchId + '&' : '' %>format=csv"><%- u.icon('download', 16) %> CSV</a>
+    </div>
+    <% if (!rows.length) { %>
+      <div class="empty">No pending dues. 🎉</div>
+    <% } else { %>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Student</th><th>Class</th><th>Phone</th><th class="num">Months</th><th class="num">Pending</th><th></th></tr></thead>
+          <tbody>
+            <% rows.forEach(r => { %>
+              <tr>
+                <td><a href="/students/<%= r.id %>"><%= r.name %></a></td>
+                <td><%= r.class %><%= r.division %></td>
+                <td><% if (r.phone) { %><a href="tel:<%= r.phone %>"><%= r.phone %></a><% } else { %>—<% } %></td>
+                <td class="num"><%= r.fee ? (r.balance / r.fee).toFixed(1).replace(/\.0$/, '') : '—' %></td>
+                <td class="num amount bad"><%= u.inr(r.balance) %></td>
+                <td><a class="btn sm" href="/collect/<%= r.id %>">Collect</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot><tr><td colspan="4">Total</td><td class="num"><%= u.inr(total) %></td><td></td></tr></tfoot>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

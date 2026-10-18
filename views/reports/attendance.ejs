@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+<%- include('_tabs') %>
+<div class="stack">
+  <form class="card filters" method="get">
+    <div class="field"><label for="batch">Class</label>
+      <select id="batch" name="batch">
+        <% batches.forEach(b => { %><option value="<%= b.id %>" <%= batch.id === b.id ? 'selected' : '' %>><%= b.class %><%= b.division %></option><% }) %>
+      </select></div>
+    <div class="field"><label for="month">Month</label><input id="month" type="month" name="month" value="<%= month %>" max="<%= u.currentMonth() %>"></div>
+    <button class="btn primary">Show</button>
+  </form>
+
+  <section class="card flush">
+    <div class="card-head">
+      <h2>Class <%= batch.class %><%= batch.division %> · <%= monthName %> <span class="muted small" style="font-weight:500">· <%= days %> day<%= days === 1 ? '' : 's' %> marked</span></h2>
+      <a class="btn sm" href="?batch=<%= batch.id %>&month=<%= month %>&format=csv"><%- u.icon('download', 16) %> CSV</a>
+    </div>
+    <% if (!rows.length) { %>
+      <div class="empty">No students in this class.</div>
+    <% } else { %>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Roll</th><th>Student</th><th class="num">Present</th><th class="num">Absent</th><th class="num">%</th><th>Absent on</th></tr></thead>
+          <tbody>
+            <% rows.forEach(r => { %>
+              <tr>
+                <td><%= r.roll_no || '—' %></td>
+                <td><a href="/students/<%= r.id %>"><%= r.name %></a></td>
+                <td class="num"><%= r.present %></td>
+                <td class="num"><%= r.absent %></td>
+                <td class="num">
+                  <% if (r.pct == null) { %>—<% } else { %>
+                    <span class="badge <%= r.pct >= 85 ? 'good' : r.pct >= 70 ? 'warn' : 'bad' %>"><%= r.pct %>%</span>
+                  <% } %>
+                </td>
+                <td class="wrap small muted"><%= r.absentDates.map(d => Number(d.slice(8))).join(', ') || '—' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

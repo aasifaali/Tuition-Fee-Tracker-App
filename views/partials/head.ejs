@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title><%= title %> · <%= settings.center_name %></title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><%= settings.center_name %></a>
+    <% const navItems = [
+      ['/', 'home', 'Home'],
+      ['/students', 'users', 'Students'],
+      ['/collect', 'rupee', 'Collect'],
+      ['/attendance', 'check', 'Attendance'],
+      ['/reports', 'chart', 'Reports'],
+    ]; %>
+    <nav class="nav" aria-label="Main">
+      <% for (const [href, ic, label] of navItems) {
+        const active = href === '/' ? path === '/' : path.startsWith(href) || (href === '/collect' && path.startsWith('/payments'));
+        if (href === '/collect') { %>
+          <a href="<%= href %>" class="collect-tab <%= active ? 'active' : '' %>"><span class="bubble"><%- u.icon(ic, 22) %></span><span>Collect fee</span></a>
+        <% } else { %>
+          <a href="<%= href %>" class="<%= active ? 'active' : '' %>"><%- u.icon(ic, 22) %><span><%= label %></span></a>
+        <% } %>
+      <% } %>
+    </nav>
+    <a class="icon-btn" href="/settings" title="Settings" aria-label="Settings"><%- u.icon('settings') %></a>
+    <form method="post" action="/logout">
+      <button class="icon-btn" title="Log out" aria-label="Log out"><%- u.icon('logout') %></button>
+    </form>
+  </div>
+</header>
+<main class="page">
+<% if (flash) { %><div class="flash <%= flash.type %>" role="status"><%= flash.text %></div><% } %>

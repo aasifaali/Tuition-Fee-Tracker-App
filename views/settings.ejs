@@ -1,0 +1,41 @@
+<%- include('partials/head') %>
+<div class="page-head"><h1>Settings</h1></div>
+<div class="grid grid-2" style="align-items:start">
+  <form class="card" method="post" action="/settings/fees">
+    <div class="card-head"><h2>Monthly fee per class</h2></div>
+    <p class="muted small" style="margin-top:-6px">Changes apply to months billed from now on. Months already billed keep their amount.</p>
+    <% [8, 9, 10].forEach(cls => { %>
+      <h3 style="margin:14px 0 8px">Class <%= cls %></h3>
+      <div class="form-row" style="grid-template-columns:1fr 1fr">
+        <% batches.filter(b => b.class === cls).forEach(b => { %>
+          <div class="field" style="margin:0">
+            <label for="fee_<%= b.id %>"><%= b.class %><%= b.division %></label>
+            <input id="fee_<%= b.id %>" name="fee_<%= b.id %>" type="number" min="0" step="1" inputmode="numeric" value="<%= b.monthly_fee %>" required>
+          </div>
+        <% }) %>
+      </div>
+    <% }) %>
+    <button class="btn primary" style="margin-top:16px">Save fees</button>
+  </form>
+
+  <div class="stack">
+    <form class="card" method="post" action="/settings/center">
+      <div class="card-head"><h2>Center details</h2></div>
+      <p class="muted small" style="margin-top:-6px">Shown on PDF receipts.</p>
+      <div class="field"><label for="center_name">Center name</label><input id="center_name" name="center_name" value="<%= settings.center_name %>" required></div>
+      <div class="field"><label for="center_address">Address</label><input id="center_address" name="center_address" value="<%= settings.center_address %>"></div>
+      <div class="field"><label for="center_phone">Phone</label><input id="center_phone" name="center_phone" value="<%= settings.center_phone %>" type="tel"></div>
+      <button class="btn primary">Save details</button>
+    </form>
+
+    <form class="card" method="post" action="/settings/password">
+      <div class="card-head"><h2>Change password</h2></div>
+      <p class="muted small" style="margin-top:-6px">Signed in as <strong><%= user.username %></strong></p>
+      <div class="field"><label for="current">Current password</label><input id="current" name="current" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="next">New password</label><input id="next" name="next" type="password" minlength="8" autocomplete="new-password" required></div>
+      <div class="field"><label for="confirm">Confirm new password</label><input id="confirm" name="confirm" type="password" minlength="8" autocomplete="new-password" required></div>
+      <button class="btn primary">Change password</button>
+    </form>
+  </div>
+</div>
+<%- include('partials/foot') %>

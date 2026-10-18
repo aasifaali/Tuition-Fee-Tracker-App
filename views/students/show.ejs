@@ -1,0 +1,107 @@
+<%- include('../partials/head') %>
+<a class="back" href="/students?batch=<%= student.batch_id %>"><%- u.icon('back', 18) %> Class <%= student.class %><%= student.division %></a>
+
+<div class="stack">
+  <section class="card">
+    <div class="profile-head">
+      <span class="avatar"><%= student.name.charAt(0).toUpperCase() %></span>
+      <div style="flex:1;min-width:0">
+        <h1><%= student.name %></h1>
+        <div class="muted">Class <%= student.class %><%= student.division %><%= student.roll_no ? ' · Roll ' + student.roll_no : '' %>
+          <% if (!student.active) { %> · <span class="badge">Inactive</span><% } %></div>
+      </div>
+      <a class="icon-btn" href="/students/<%= student.id %>/edit" title="Edit" aria-label="Edit student"><%- u.icon('edit') %></a>
+    </div>
+    <dl class="kv" style="margin-top:16px">
+      <dt>Parent</dt><dd><%= student.parent_name || '—' %></dd>
+      <dt>Phone</dt><dd><% if (student.phone) { %><a href="tel:<%= student.phone %>"><%= student.phone %></a><% } else { %>—<% } %></dd>
+      <% if (student.address) { %><dt>Address</dt><dd><%= student.address %></dd><% } %>
+      <dt>Joined</dt><dd><%= u.dateLabel(student.join_date) %></dd>
+      <dt>Monthly fee</dt><dd><%= u.inr(student.monthly_fee ?? student.batch_fee) %><%= student.monthly_fee != null ? ' (custom)' : '' %></dd>
+      <% if (student.notes) { %><dt>Notes</dt><dd><%= student.notes %></dd><% } %>
+    </dl>
+  </section>
+
+  <section class="card">
+    <div class="balance-box">
+      <div>
+        <div class="muted small" style="font-weight:600;text-transform:uppercase;letter-spacing:.04em">
+          <%= ledger.balance < 0 ? 'Advance credit' : 'Pending amount' %>
+        </div>
+        <div class="value <%= ledger.balance > 0 ? 'amount bad' : 'amount good' %>"><%= u.inr(Math.abs(ledger.balance)) %></div>
+        <div class="muted small">Total billed <%= u.inr(ledger.totalDue) %> · paid <%= u.inr(ledger.totalPaid) %></div>
+      </div>
+      <a class="btn primary lg" href="/collect/<%= student.id %>"><%- u.icon('rupee', 18) %> Collect fee</a>
+    </div>
+  </section>
+
+  <div class="grid grid-2">
+    <section class="card flush">
+      <div class="card-head"><h2>Payment receipts</h2></div>
+      <% if (!ledger.payments.length) { %>
+        <div class="empty">No payments yet.</div>
+      <% } else { %>
+        <ul class="list" style="margin-top:8px">
+          <% ledger.payments.forEach(p => { %>
+            <li class="row">
+              <a class="main" href="/payments/<%= p.id %>" style="color:inherit">
+                <div class="title"><%= u.inr(p.amount) %> <span class="muted small" style="font-weight:500">· <%= u.MODES[p.mode] %></span></div>
+                <div class="meta"><%= p.receipt_no %> · <%= u.dateLabel(p.paid_on) %></div>
+                <div class="meta"><%= coversLabel(p) %></div>
+              </a>
+              <a class="btn sm" href="/payments/<%= p.id %>/pdf" title="Download PDF receipt"><%- u.icon('download', 16) %> PDF</a>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+
+    <section class="card" id="fees">
+      <div class="card-head"><h2>Monthly fees</h2></div>
+      <% if (!ledger.dues.length) { %>
+        <p class="muted" style="margin:0">No months billed yet.</p>
+      <% } else { %>
+        <div class="months">
+          <% ledger.dues.forEach(d => { %>
+            <div class="month <%= d.status %>">
+              <div class="m"><%= u.monthLabel(d.month) %></div>
+              <div><%= d.status === 'paid' ? 'Paid' : d.status === 'partial' ? `${u.inr(d.amount - d.paid)} left` : d.status === 'waived' ? 'Waived' : u.inr(d.amount) + ' due' %></div>
+              <% if (d.status === 'due' || d.status === 'waived') { %>
+                <form method="post" action="/students/<%= student.id %>/dues/<%= d.id %>/waive"
+                  data-confirm="<%= d.waived ? 'Restore' : 'Waive' %> the fee for <%= u.monthLabel(d.month) %>?">
+                  <button><%= d.waived ? 'Restore' : 'Waive' %></button>
+                </form>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h2>Attendance</h2><a href="/reports/attendance?batch=<%= student.batch_id %>">Class report</a></div>
+    <div class="stats">
+      <div>
+        <div class="muted small"><%= monthName %></div>
+        <div class="amount" style="font-size:20px"><%= att.total ? Math.round(att.present / att.total * 100) + '%' : '—' %></div>
+        <div class="muted small"><%= att.present %>/<%= att.total %> days present</div>
+      </div>
+      <div>
+        <div class="muted small">Overall</div>
+        <div class="amount" style="font-size:20px"><%= attAll.total ? Math.round(attAll.present / attAll.total * 100) + '%' : '—' %></div>
+        <div class="muted small"><%= attAll.present %>/<%= attAll.total %> days present</div>
+      </div>
+    </div>
+    <% if (absences.length) { %>
+      <p class="small" style="margin:14px 0 0"><span class="muted">Recent absences:</span>
+        <%= absences.map(a => u.dateLabel(a.date)).join(', ') %></p>
+    <% } %>
+  </section>
+
+  <form method="post" action="/students/<%= student.id %>/toggle-active"
+    data-confirm="<%= student.active ? `Mark ${student.name} inactive? No new monthly fees will be added.` : `Make ${student.name} active again?` %>">
+    <button class="btn <%= student.active ? 'danger' : '' %>"><%= student.active ? 'Mark inactive (left the center)' : 'Mark active again' %></button>
+  </form>
+</div>
+<%- include('../partials/foot') %>

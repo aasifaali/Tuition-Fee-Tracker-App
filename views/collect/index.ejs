@@ -1,0 +1,42 @@
+<%- include('../partials/head') %>
+<div class="page-head"><h1>Collect fee</h1></div>
+
+<div class="stack">
+  <div class="search">
+    <%- u.icon('search', 18) %>
+    <input type="search" placeholder="Search student name, roll no or phone" data-filter="#collect-list" autofocus aria-label="Search students">
+  </div>
+
+  <div class="chips" data-chip-filter="#collect-list">
+    <button class="chip active" data-value="">All</button>
+    <button class="chip" data-value="due">Has dues</button>
+    <% batches.forEach(b => { %><button class="chip" data-value="b<%= b.id %>"><%= b.class %><%= b.division %></button><% }) %>
+  </div>
+
+  <section class="card flush">
+    <% if (!rows.length) { %>
+      <div class="empty"><p>No active students yet.</p><a class="btn primary" href="/students/new">Add a student</a></div>
+    <% } else { %>
+      <ul class="list" id="collect-list">
+        <% rows.forEach(s => { %>
+          <li data-search="<%= [s.name, s.roll_no, s.phone, s.parent_name].filter(Boolean).join(' ').toLowerCase() %>"
+              data-tags="b<%= s.batch_id %><%= s.balance > 0 ? ' due' : '' %>">
+            <a class="row" href="/collect/<%= s.id %>">
+              <span class="avatar"><%= s.name.charAt(0).toUpperCase() %></span>
+              <span class="main">
+                <div class="title"><%= s.name %></div>
+                <div class="meta">Class <%= s.class %><%= s.division %><%= s.roll_no ? ' · Roll ' + s.roll_no : '' %></div>
+              </span>
+              <span class="end">
+                <% if (s.balance > 0) { %><div class="amount bad"><%= u.inr(s.balance) %></div><div class="meta">pending</div>
+                <% } else { %><span class="badge good">Paid up</span><% } %>
+              </span>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="empty hidden" data-empty>No matching students.</div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

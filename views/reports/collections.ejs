@@ -1,0 +1,65 @@
+<%- include('../partials/head') %>
+<%- include('_tabs') %>
+<% const qs = (extra) => new URLSearchParams(Object.entries({ from, to, batch: batchId || '', mode: mode || '', ...extra }).filter(([, v]) => v)).toString(); %>
+<div class="stack">
+  <div class="chips">
+    <% presets.forEach(p => { %>
+      <a class="chip <%= p.from === from && p.to === to ? 'active' : '' %>" href="?<%= qs({ from: p.from, to: p.to }) %>"><%= p.label %></a>
+    <% }) %>
+  </div>
+
+  <form class="card filters" method="get">
+    <div class="field"><label for="from">From</label><input id="from" type="date" name="from" value="<%= from %>"></div>
+    <div class="field"><label for="to">To</label><input id="to" type="date" name="to" value="<%= to %>"></div>
+    <div class="field"><label for="batch">Class</label>
+      <select id="batch" name="batch"><option value="">All classes</option>
+        <% batches.forEach(b => { %><option value="<%= b.id %>" <%= batchId === b.id ? 'selected' : '' %>><%= b.class %><%= b.division %></option><% }) %>
+      </select></div>
+    <div class="field"><label for="mode">Mode</label>
+      <select id="mode" name="mode"><option value="">All modes</option>
+        <% Object.entries(u.MODES).forEach(([k, v]) => { %><option value="<%= k %>" <%= mode === k ? 'selected' : '' %>><%= v %></option><% }) %>
+      </select></div>
+    <button class="btn primary">Apply</button>
+  </form>
+
+  <section class="stats">
+    <div class="card stat hero">
+      <div class="label">Total collected</div>
+      <div class="value"><%= u.inr(total) %></div>
+      <div class="sub"><%= rows.length %> receipts · <%= u.dateLabel(from) %> – <%= u.dateLabel(to) %></div>
+    </div>
+    <% modeTotals.forEach(m => { %>
+      <div class="card stat"><div class="label"><%= u.MODES[m.mode] %></div><div class="value"><%= u.inr(m.total) %></div></div>
+    <% }) %>
+  </section>
+
+  <section class="card flush">
+    <div class="card-head">
+      <h2>Payments</h2>
+      <a class="btn sm" href="?<%= qs({ format: 'csv' }) %>"><%- u.icon('download', 16) %> CSV</a>
+    </div>
+    <% if (!rows.length) { %>
+      <div class="empty">No payments in this period.</div>
+    <% } else { %>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Date</th><th>Student</th><th>Class</th><th>Mode</th><th>Receipt</th><th class="num">Amount</th></tr></thead>
+          <tbody>
+            <% rows.forEach(r => { %>
+              <tr>
+                <td><%= u.dateLabel(r.paid_on) %></td>
+                <td><a href="/students/<%= r.student_id %>"><%= r.name %></a></td>
+                <td><%= r.class %><%= r.division %></td>
+                <td><%= u.MODES[r.mode] %></td>
+                <td><a href="/payments/<%= r.id %>"><%= r.receipt_no %></a></td>
+                <td class="num"><%= u.inr(r.amount) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot><tr><td colspan="5">Total</td><td class="num"><%= u.inr(total) %></td></tr></tfoot>
+        </table>
+      </div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

@@ -1,0 +1,44 @@
+<%- include('../partials/head') %>
+<%
+  const phone = (student.phone || '').replace(/\D/g, '');
+  const waPhone = phone.length === 10 ? '91' + phone : phone;
+  const balanceText = balanceAfter > 0 ? `Pending balance: ${u.inr(balanceAfter)}.` : balanceAfter < 0 ? `Advance credit: ${u.inr(-balanceAfter)}.` : 'No pending dues.';
+  const waText = `Dear Parent, we have received ${u.inr(payment.amount)} towards tuition fees of ${student.name} (Class ${student.class}${student.division}) for ${coversLabel}. Receipt No: ${payment.receipt_no}, Date: ${u.dateLabel(payment.paid_on)}. ${balanceText} Thank you. - ${settings.center_name}`;
+%>
+<% if (!isNew) { %><a class="back" href="/students/<%= student.id %>"><%- u.icon('back', 18) %> <%= student.name %></a><% } %>
+
+<section class="card receipt-card">
+  <% if (isNew) { %>
+    <div class="success-mark"><%- u.icon('check', 30) %></div>
+    <h1>Payment saved</h1>
+  <% } else { %>
+    <h1>Receipt</h1>
+  <% } %>
+  <div class="amount good" style="font-size:32px;margin-top:6px"><%= u.inr(payment.amount) %></div>
+  <div class="muted"><%= student.name %> · Class <%= student.class %><%= student.division %></div>
+
+  <dl class="kv">
+    <dt>Receipt no.</dt><dd><strong><%= payment.receipt_no %></strong></dd>
+    <dt>Date</dt><dd><%= u.dateLabel(payment.paid_on) %></dd>
+    <dt>For</dt><dd><%= coversLabel %></dd>
+    <dt>Mode</dt><dd><%= u.MODES[payment.mode] %></dd>
+    <% if (payment.note) { %><dt>Note</dt><dd><%= payment.note %></dd><% } %>
+    <dt>Balance</dt><dd class="<%= balanceAfter > 0 ? 'amount bad' : '' %>"><%= balanceText %></dd>
+  </dl>
+
+  <div class="stack">
+    <a class="btn primary block lg" href="/payments/<%= payment.id %>/pdf"><%- u.icon('download', 18) %> Download PDF receipt</a>
+    <a class="btn block" target="_blank" rel="noopener"
+       href="https://wa.me/<%= waPhone %>?text=<%= encodeURIComponent(waText) %>"><%- u.icon('whatsapp', 18) %> Send on WhatsApp</a>
+    <div class="btn-row">
+      <a class="btn" style="flex:1" href="/collect"><%- u.icon('rupee', 18) %> Collect another</a>
+      <a class="btn" style="flex:1" href="/students/<%= student.id %>">View profile</a>
+    </div>
+  </div>
+</section>
+
+<form method="post" action="/payments/<%= payment.id %>/delete" style="text-align:center;margin-top:20px"
+  data-confirm="Delete receipt <%= payment.receipt_no %> for <%= u.inr(payment.amount) %>? This cannot be undone.">
+  <button class="btn sm danger">Delete this receipt (entered by mistake)</button>
+</form>
+<%- include('../partials/foot') %>

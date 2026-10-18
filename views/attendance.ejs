@@ -1,0 +1,66 @@
+<%- include('partials/head') %>
+<% if (!batch) { %>
+  <div class="page-head">
+    <h1>Attendance</h1>
+    <form method="get" action="/attendance">
+      <input type="date" name="date" value="<%= date %>" max="<%= u.today() %>" data-autosubmit aria-label="Date" style="width:auto">
+    </form>
+  </div>
+  <p class="muted" style="margin-top:-8px">Choose a class to mark attendance for <strong><%= u.dateLabel(date) %></strong>.</p>
+  <div class="batch-grid">
+    <% batches.forEach(b => { %>
+      <a class="card batch-tile" href="/attendance?batch=<%= b.id %>&date=<%= date %>">
+        <div class="name"><%= b.class %><%= b.division %></div>
+        <div class="muted small"><%= b.students %> student<%= b.students === 1 ? '' : 's' %></div>
+        <div style="margin-top:8px">
+          <% if (!b.students) { %><span class="badge">No students</span>
+          <% } else if (b.marked) { %><span class="badge good"><%= b.present %>/<%= b.marked %> present</span>
+          <% } else { %><span class="badge warn">Not marked</span><% } %>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+<% } else { %>
+  <a class="back" href="/attendance?date=<%= date %>"><%- u.icon('back', 18) %> All classes</a>
+  <div class="page-head">
+    <h1>Class <%= batch.class %><%= batch.division %></h1>
+    <form method="get" action="/attendance">
+      <input type="hidden" name="batch" value="<%= batch.id %>">
+      <input type="date" name="date" value="<%= date %>" max="<%= u.today() %>" data-autosubmit aria-label="Date" style="width:auto">
+    </form>
+  </div>
+
+  <% if (!students.length) { %>
+    <div class="card empty"><p>No active students in this class.</p><a class="btn primary" href="/students/new?batch=<%= batch.id %>">Add a student</a></div>
+  <% } else { %>
+    <p class="muted" style="margin-top:-8px">
+      <%= marked ? 'Already marked for this date. Changes will update it.' : 'Everyone is present by default. Tap a student to mark absent.' %>
+    </p>
+    <form method="post" action="/attendance" data-attendance>
+      <input type="hidden" name="date" value="<%= date %>">
+      <input type="hidden" name="batch_id" value="<%= batch.id %>">
+      <section class="card flush">
+        <ul class="list att-list">
+          <% students.forEach(s => { %>
+            <li>
+              <label class="row" style="margin:0;font-size:inherit;font-weight:inherit;color:inherit">
+                <input type="hidden" name="student_ids" value="<%= s.id %>">
+                <input type="checkbox" name="absent" value="<%= s.id %>" <%= s.status === 'A' ? 'checked' : '' %>>
+                <span class="main">
+                  <div class="title"><%= s.name %></div>
+                  <div class="meta"><%= s.roll_no ? 'Roll ' + s.roll_no : '' %></div>
+                </span>
+                <span class="att-toggle"><span class="p">Present</span><span class="a">Absent</span></span>
+              </label>
+            </li>
+          <% }) %>
+        </ul>
+      </section>
+      <div class="sticky-actions">
+        <div class="summary"><strong data-present></strong> present · <strong data-absent></strong> absent</div>
+        <button class="btn primary">Save attendance</button>
+      </div>
+    </form>
+  <% } %>
+<% } %>
+<%- include('partials/foot') %>
